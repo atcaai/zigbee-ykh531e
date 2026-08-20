@@ -1,33 +1,22 @@
-import argparse
 # Import the unified module components
 from ykh531e import YKH531EClimateState, build_ykh531e_packet, parse_ykh531e_packet
 from packet_to_timings import packet_to_timings
 from broadlink_to_tuya import encode_raw_ir
 #from encode_34 import encode_34
 
-# Parse Command-Line Arguments
-parser = argparse.ArgumentParser(description="Generate Zosung Zigbee IR payloads for YK-H/531E AC units.")
-parser.add_argument("--mode", type=str, default="cool", choices=["cool", "heat", "auto", "dry", "fan_only", "off"], help="Operation mode")
-parser.add_argument("--target_temperature", "--temp", type=float, default=22.0, help="Target temperature")
-parser.add_argument("--fan_mode", "--fan", type=str, default="medium", choices=["auto", "low", "medium", "high"], help="Fan speed")
-parser.add_argument("--swing_mode", "--swing", type=str, default="off", choices=["off", "vertical"], help="Swing mode")
-parser.add_argument("--transmit_fahrenheit", "--fahrenheit", action="store_true", help="Set to transmit in Fahrenheit mode")
-
-args = parser.parse_args()
-
 # 1. Create and configure a target state
 state = YKH531EClimateState()
-state.mode = args.mode
-state.target_temperature = args.target_temperature
-state.fan_mode = args.fan_mode
-state.swing_mode = args.swing_mode
-state.transmit_fahrenheit = args.transmit_fahrenheit
+state.mode = "cool"
+state.target_temperature = 22.0
+state.fan_mode = "medium"
+state.swing_mode = "off"
+state.transmit_fahrenheit = False
 
 # 2. Build the 13-byte IR packet for transmission
 packet = build_ykh531e_packet(state)
 print("Generated IR Packet (Hex):", packet.hex(" ").upper())
 
-# 3. Convert the packet into a Tuya and Zosung Zigbee IR devices coded raw timing array from the ir_message bytearray
+# 3. Convert the packet into a Tuya and Zosung Zigbee IR devices coded raw timing array from the ir_message bytearray 
 packet = build_ykh531e_packet(state)
 raw_timings = packet_to_timings(packet)
 print("Generated IR timing code (Raw):", raw_timings)

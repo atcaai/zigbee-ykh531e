@@ -20,6 +20,15 @@ def encode_ir(command: str) -> str:
   payload = out.getvalue()
   return base64.encodebytes(payload).decode('ascii').replace('\n', '')
 
+def encode_raw_ir(raw_timings: list[int]) -> str:
+    """Compresses a raw list of microsecond timing integers directly into Tuya Base64."""
+    signal = filter(raw_timings)
+
+    payload = b''.join(pack('<H', t) for t in signal)
+    compress(out := io.BytesIO(), payload, level=2)
+    payload = out.getvalue()
+    return base64.encodebytes(payload).decode('ascii').replace('\n', '')
+
 
 # COMPRESSION
 
@@ -79,7 +88,17 @@ def compress(out: io.FileIO, data: bytes, level=2):
 	if level >= 2:
 		suffixes = []; next_pos = 0
 		key = lambda n: data[n:]
-		find_idx = lambda n: bisect(suffixes, key(n), key=key)
+		def find_idx(n):
+			target = key(n)
+			lo, hi =0, len(suffixes)
+			while lo < hi:
+				mid = (lo + hi) // 2
+				if key(suffixes[mid]) <= target:
+					lo = mid + 1
+				else:
+					hi = mid
+			return lo
+		#find_idx = lambda n: bisect(suffixes, key(n), key=key)
 		def distance_candidates():
 			nonlocal next_pos
 			while next_pos <= pos:
@@ -170,4 +189,7 @@ def process_commands(filename):
   return json.dumps(data, indent=2)
 
 
-print(process_commands(sys.argv[1]))
+#print(process_commands(sys.argv[1]))
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        print(process_commands(sys.argv[1]))
